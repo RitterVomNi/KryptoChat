@@ -44,13 +44,18 @@ public class LoginActivity extends AppCompatActivity {
                             public void onResponse(JSONObject response) {
                                 Intent i = new Intent(LoginActivity.this, ChatActivity.class);
                                 try {
-                                i.putExtra("pubkey", response.getString("pubkey_user"));
+                                    KryptoChat kC = (KryptoChat) getApplication();
+                                    kC.setPubkey(response.getString("pubkey_user"));
+                                    kC.setPrivkey_user_enc(response.getString("privkey_user_enc"));
+                                    kC.setUserName(login.getText().toString());
+                                    kC.setSalt_masterkey(response.getString("salt_masterkey"));
                                     startActivity(i);
-                                } catch (Exception e) {}
+                                } catch (Exception e) {e.printStackTrace();}
                             }
                         }, new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
+                        error.printStackTrace();
                     }
                 });
 // Add the request to the RequestQueue.
