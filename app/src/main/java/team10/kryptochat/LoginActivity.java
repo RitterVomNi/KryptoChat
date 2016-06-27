@@ -36,7 +36,8 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if(login != null) {
-                String url ="https://webengserver.herokuapp.com/"+login.getText();
+                    String url ="http://10.0.2.2:3000/"+login.getText();
+                //String url ="https://webengserver.herokuapp.com/"+login.getText();
                 // Request a string response from the provided URL.
                     JsonObjectRequest jsonRequest = new JsonObjectRequest(Request.Method.GET, url,
                         new Response.Listener<JSONObject>() {

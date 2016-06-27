@@ -19,22 +19,25 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ChatActivity extends AppCompatActivity {
-    KryptoChat kC = (KryptoChat) getApplication();
-    final RequestQueue queue = Volley.newRequestQueue(this);
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
+        final KryptoChat kC = (KryptoChat) getApplication();
 
-        EditText receiver = (EditText) findViewById(R.id.editText4);
-        EditText message = (EditText) findViewById(R.id.editText5);
+        EditText receive = (EditText) findViewById(R.id.editText4);
+        EditText msg = (EditText) findViewById(R.id.editText5);
 
-        final String receiverr = receiver.getText().toString();
+        final String receiver = receive.getText().toString();
+        final String message = msg.getText().toString();
 
+        final RequestQueue queue = Volley.newRequestQueue(this);
 
-
-        String url ="https://webengserver.herokuapp.com/"+receiverr+"/pubkey";
+        String url ="http://10.0.2.2:3000/"+receiver+"/pubkey";
+        //String url ="https://webengserver.herokuapp.com/"+receiver+"/pubkey";
         // Request a string response from the provided URL.
         JsonObjectRequest jsonRequest = new JsonObjectRequest(Request.Method.GET, url,
                 new Response.Listener<JSONObject>() {
@@ -50,11 +53,11 @@ public class ChatActivity extends AppCompatActivity {
                 error.printStackTrace();
             }
         });
-// Add the request to the RequestQueue.
+        // Add the request to the RequestQueue.
         queue.add(jsonRequest);
 
-
-        url = "https://webengserver.herokuapp.com/" + receiverr+"/Message";
+        url ="http://10.0.2.2:3000/"+receiver+"/Message";
+       // url = "https://webengserver.herokuapp.com/" + receiver+"/Message";
         StringRequest sr = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
@@ -66,11 +69,13 @@ public class ChatActivity extends AppCompatActivity {
         }) {
             @Override
             protected Map<String, String> getParams() {
+
                 Map<String, String> params = new HashMap<>();
-                params.put("recipient", receiverr);
+                params.put("recipient", receiver);
                 params.put("sender", kC.getUserName());
-                params.put("pubkey_user", publicKey.toString());
-                params.put("privkey_user_enc", Base64.encodeToString(privkey_user_enc, Base64.DEFAULT));
+                params.put("content_enc", message);
+               // params.put("pubkey_user", publicKey.toString());
+               // params.put("privkey_user_enc", Base64.encodeToString(privkey_user_enc, Base64.DEFAULT));
                 return params;
             }
 

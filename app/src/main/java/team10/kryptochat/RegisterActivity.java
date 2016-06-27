@@ -18,6 +18,13 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
 
+import org.spongycastle.crypto.PBEParametersGenerator;
+import org.spongycastle.crypto.digests.SHA256Digest;
+import org.spongycastle.crypto.generators.PKCS5S2ParametersGenerator;
+import org.spongycastle.crypto.params.KeyParameter;
+import org.spongycastle.openssl.jcajce.JcaPEMWriter;
+
+import java.io.StringWriter;
 import java.security.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,6 +32,7 @@ import java.util.Map;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
 
 public class RegisterActivity extends AppCompatActivity {
 
@@ -58,32 +66,52 @@ public class RegisterActivity extends AppCompatActivity {
                 final String login = eingabe[0];
                 publishProgress(10);
             try {
+
+                PKCS5S2ParametersGenerator generator = new PKCS5S2ParametersGenerator(new SHA256Digest());
+                generator.init(PBEParametersGenerator.PKCS5PasswordToUTF8Bytes(chars), salt_masterkey, iterations);
+                KeyParameter masterkey_bytes = (KeyParameter)generator.generateDerivedMacParameters(256);
+
+/*
+                StringWriter sw = new StringWriter();
+                JcaPEMWriter pemWriter = new JcaPEMWriter(sw);
+                pemWriter.writeObject(pubKey);
+                pemWriter.close();
+                final String publicKey =  sw.toString();
+                publishProgress(40);
+
                 PBEKeySpec spec = new PBEKeySpec(chars, salt_masterkey, iterations, 32 * 8);
                 SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
                 publishProgress(20);
                 Key masterkey = skf.generateSecret(spec);
-
+*/
 
                 KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
                 kpg.initialize(2048);
                 publishProgress(30);
                 KeyPair kp = kpg.genKeyPair();
                 publishProgress(32);
-                final PublicKey publicKey = kp.getPublic();
+                final PublicKey pubKey = kp.getPublic();
                 publishProgress(36);
-                Key privateKey = kp.getPrivate();
+                PrivateKey privateKey = kp.getPrivate();
 
+                StringWriter sw = new StringWriter();
+                JcaPEMWriter pemWriter = new JcaPEMWriter(sw);
+                pemWriter.writeObject(pubKey);
+                pemWriter.close();
+                final String publicKey =  sw.toString();
                 publishProgress(40);
 
                 Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
                 publishProgress(60);
-                cipher.init(Cipher.WRAP_MODE,masterkey);
+                SecretKeySpec skc = new SecretKeySpec(masterkey_bytes, "AES");
+                cipher.init(Cipher.ENCRYPT_MODE, masterkey_bytes.getKey());
                 publishProgress(70);
-                final byte[] privkey_user_enc = cipher.wrap(privateKey);
+                final byte[] privkey_user_enc = cipher.doFinal(privateKey.getEncoded());
 
                 publishProgress(80);
 
-                String url = "https://webengserver.herokuapp.com/" + login;
+                String url ="http://10.0.2.2:3000/"+login;
+               // String url = "https://webengserver.herokuapp.com/" + login;
                 StringRequest sr = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
@@ -98,7 +126,7 @@ public class RegisterActivity extends AppCompatActivity {
                         Map<String, String> params = new HashMap<>();
                         params.put("login", login);
                         params.put("salt_masterkey", Base64.encodeToString(salt_masterkey, Base64.DEFAULT));
-                        params.put("pubkey_user", publicKey.toString());
+                        params.put("pubkey_user", publicKey);
                         params.put("privkey_user_enc", Base64.encodeToString(privkey_user_enc, Base64.DEFAULT));
                         return params;
                     }
