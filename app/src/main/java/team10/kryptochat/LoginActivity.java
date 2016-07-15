@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -19,14 +20,15 @@ import org.json.JSONObject;
 
 public class LoginActivity extends AppCompatActivity {
     Button btn;
+    protected KryptoChat kC;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         final EditText login = (EditText) findViewById(R.id.editText);
-        EditText pass = (EditText) findViewById(R.id.editText2);
-
+        final EditText pass = (EditText) findViewById(R.id.editText2);
+        kC = (KryptoChat) getApplication();
 
         final RequestQueue queue = Volley.newRequestQueue(this);
 
@@ -35,9 +37,9 @@ public class LoginActivity extends AppCompatActivity {
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(login != null) {
-                    String url ="http://10.0.2.2:3000/"+login.getText();
-                //String url ="https://webengserver.herokuapp.com/"+login.getText();
+                if(login != null && pass != null) {
+                 //   String url ="http://10.0.2.2:3000/"+login.getText();
+                String url ="https://webengserver.herokuapp.com/"+login.getText();
                 // Request a string response from the provided URL.
                     JsonObjectRequest jsonRequest = new JsonObjectRequest(Request.Method.GET, url,
                         new Response.Listener<JSONObject>() {
@@ -45,12 +47,13 @@ public class LoginActivity extends AppCompatActivity {
                             public void onResponse(JSONObject response) {
                                 Intent i = new Intent(LoginActivity.this, ChatActivity.class);
                                 try {
-                                    KryptoChat kC = (KryptoChat) getApplication();
+                                    kC.setPassword(pass.getText().toString());
                                     kC.setPubkey(response.getString("pubkey_user"));
                                     kC.setPrivkey_user_enc(response.getString("privkey_user_enc"));
                                     kC.setUserName(login.getText().toString());
                                     kC.setSalt_masterkey(response.getString("salt_masterkey"));
                                     startActivity(i);
+                                    Toast.makeText(LoginActivity.this,"Hallo "+ kC.getUserName(), Toast.LENGTH_LONG).show();
                                 } catch (Exception e) {e.printStackTrace();}
                             }
                         }, new Response.ErrorListener() {

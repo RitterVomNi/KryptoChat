@@ -43,6 +43,7 @@
         android:layout_height="wrap_content"
         android:text="Abschicken"
         android:id="@+id/button2"
+        android:onClick="senden"
         android:layout_centerVertical="true" />
 
 </RelativeLayout>

@@ -71,19 +71,6 @@ public class RegisterActivity extends AppCompatActivity {
                 generator.init(PBEParametersGenerator.PKCS5PasswordToUTF8Bytes(chars), salt_masterkey, iterations);
                 KeyParameter masterkey_bytes = (KeyParameter)generator.generateDerivedMacParameters(256);
 
-/*
-                StringWriter sw = new StringWriter();
-                JcaPEMWriter pemWriter = new JcaPEMWriter(sw);
-                pemWriter.writeObject(pubKey);
-                pemWriter.close();
-                final String publicKey =  sw.toString();
-                publishProgress(40);
-
-                PBEKeySpec spec = new PBEKeySpec(chars, salt_masterkey, iterations, 32 * 8);
-                SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
-                publishProgress(20);
-                Key masterkey = skf.generateSecret(spec);
-*/
 
                 KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
                 kpg.initialize(2048);
@@ -103,15 +90,15 @@ public class RegisterActivity extends AppCompatActivity {
 
                 Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
                 publishProgress(60);
-                SecretKeySpec skc = new SecretKeySpec(masterkey_bytes, "AES");
-                cipher.init(Cipher.ENCRYPT_MODE, masterkey_bytes.getKey());
+                SecretKeySpec skc = new SecretKeySpec(masterkey_bytes.getKey(), "AES");
+                cipher.init(Cipher.ENCRYPT_MODE, skc);
                 publishProgress(70);
                 final byte[] privkey_user_enc = cipher.doFinal(privateKey.getEncoded());
 
                 publishProgress(80);
 
-                String url ="http://10.0.2.2:3000/"+login;
-               // String url = "https://webengserver.herokuapp.com/" + login;
+               // String url ="http://10.0.2.2:3000/"+login;
+                String url = "https://webengserver.herokuapp.com/" + login;
                 StringRequest sr = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
