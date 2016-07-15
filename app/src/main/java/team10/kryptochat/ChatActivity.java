@@ -58,6 +58,8 @@ public class ChatActivity extends AppCompatActivity {
 
         kC = (KryptoChat) getApplication();
 
+
+
     }
     public void senden(View button) {
 
@@ -66,7 +68,7 @@ public class ChatActivity extends AppCompatActivity {
 
         final RequestQueue queue = Volley.newRequestQueue(this);
 
-       // String url ="http://10.0.2.2:3000/"+receiver+"/pubkey";
+        // String url ="http://10.0.2.2:3000/"+receiver+"/pubkey";
         String url ="https://webengserver.herokuapp.com/"+receiver+"/pubkey";
         // Request a string response from the provided URL.
         JsonObjectRequest jsonRequest = new JsonObjectRequest(Request.Method.GET, url,
@@ -89,60 +91,66 @@ public class ChatActivity extends AppCompatActivity {
         final byte[] key_recipient = SecureRandom.getSeed(16);
         final byte[] iv = SecureRandom.getSeed(16);
 
-        try {
-            //PubKey des Empfängers erzeugen
-            StringReader stringReader = new StringReader(pubkey);
-            PemReader pemReader = new PemReader(stringReader);
-
-            PemObject obj = pemReader.readPemObject();
-            pemReader.close();
-
-            KeyFactory keyFactory = null;
-            keyFactory = KeyFactory.getInstance("RSA");
-
-            X509EncodedKeySpec spec = new X509EncodedKeySpec(obj.getContent());
-            PublicKey pubkey_recipient = keyFactory.generatePublic(spec);
-
-            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-            SecretKeySpec skc = new SecretKeySpec(key_recipient, "AES");
-            cipher.init(Cipher.ENCRYPT_MODE, skc, new IvParameterSpec(iv));
-            content_enc = cipher.doFinal(message.getBytes());
-
-            byte[] salt_masterkey = Base64.decode(kC.getSalt_masterkey(), Base64.DEFAULT);
-            char[] chars = kC.getPassword().toCharArray();
-
-            PKCS5S2ParametersGenerator generator = new PKCS5S2ParametersGenerator(new SHA256Digest());
-            generator.init(PBEParametersGenerator.PKCS5PasswordToUTF8Bytes(chars), salt_masterkey, iterations);
-            KeyParameter masterkey_bytes = (KeyParameter)generator.generateDerivedMacParameters(256);
 
 
-            Cipher cipher3 = Cipher.getInstance("AES/ECB/PKCS5Padding");
-            SecretKeySpec skc2 = new SecretKeySpec(masterkey_bytes.getKey(), "AES");
-            cipher3.init(Cipher.DECRYPT_MODE, skc2);
-            byte[] privkey_user = cipher3.doFinal(Base64.decode(kC.getPrivkey_user_enc().getBytes("utf-8"), Base64.DEFAULT));
-
-
-            KeyFactory keyFactoryy = KeyFactory.getInstance("RSA");
-            EncodedKeySpec specc = new PKCS8EncodedKeySpec(privkey_user);
-            PrivateKey privKey = keyFactoryy.generatePrivate(specc);
-
-
-            Cipher cipher2 = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-            cipher2.init(Cipher.ENCRYPT_MODE, pubkey_recipient);
-            key_recipient_enc = cipher2.doFinal(key_recipient);
-
-            Signature signature = Signature.getInstance("SHA256withRSA");
-            signature.initSign(privKey);
-            signature.update(content_enc);
-            sig_recipient = signature.sign();
-            sig_service = signature.sign();
-
-            long tsLong = System.currentTimeMillis()/1000;
-            timestamp = Integer.toString(((int)tsLong));
 
             class SendTask extends AsyncTask<String, Integer, Boolean> {
                 Boolean result = false;
                 protected Boolean doInBackground(String... eingabe) {
+
+
+                    try {
+                    //PubKey des Empfängers erzeugen
+                    StringReader stringReader = new StringReader(pubkey);
+                    PemReader pemReader = new PemReader(stringReader);
+
+                    PemObject obj = pemReader.readPemObject();
+                    pemReader.close();
+
+                    KeyFactory keyFactory = null;
+                    keyFactory = KeyFactory.getInstance("RSA");
+
+                    X509EncodedKeySpec spec = new X509EncodedKeySpec(obj.getContent());
+                    PublicKey pubkey_recipient = keyFactory.generatePublic(spec);
+
+                    Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+                    SecretKeySpec skc = new SecretKeySpec(key_recipient, "AES");
+                    cipher.init(Cipher.ENCRYPT_MODE, skc, new IvParameterSpec(iv));
+                    content_enc = cipher.doFinal(message.getBytes());
+
+                    byte[] salt_masterkey = Base64.decode(kC.getSalt_masterkey(), Base64.DEFAULT);
+                    char[] chars = kC.getPassword().toCharArray();
+
+                    PKCS5S2ParametersGenerator generator = new PKCS5S2ParametersGenerator(new SHA256Digest());
+                    generator.init(PBEParametersGenerator.PKCS5PasswordToUTF8Bytes(chars), salt_masterkey, iterations);
+                    KeyParameter masterkey_bytes = (KeyParameter)generator.generateDerivedMacParameters(256);
+
+
+                    Cipher cipher3 = Cipher.getInstance("AES/ECB/PKCS5Padding");
+                    SecretKeySpec skc2 = new SecretKeySpec(masterkey_bytes.getKey(), "AES");
+                    cipher3.init(Cipher.DECRYPT_MODE, skc2);
+                    byte[] privkey_user = cipher3.doFinal(Base64.decode(kC.getPrivkey_user_enc().getBytes("utf-8"), Base64.DEFAULT));
+
+
+                    KeyFactory keyFactoryy = KeyFactory.getInstance("RSA");
+                    EncodedKeySpec specc = new PKCS8EncodedKeySpec(privkey_user);
+                    PrivateKey privKey = keyFactoryy.generatePrivate(specc);
+
+
+                    Cipher cipher2 = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+                    cipher2.init(Cipher.ENCRYPT_MODE, pubkey_recipient);
+                    key_recipient_enc = cipher2.doFinal(key_recipient);
+
+                    Signature signature = Signature.getInstance("SHA256withRSA");
+                    signature.initSign(privKey);
+                    signature.update(content_enc);
+                    sig_recipient = signature.sign();
+                    sig_service = signature.sign();
+
+                    long tsLong = System.currentTimeMillis()/1000;
+                    timestamp = Integer.toString(((int)tsLong));
+
+                    } catch(Exception e) {e.printStackTrace();}
 
                     //url ="http://10.0.2.2:3000/"+receiver+"/message";
                     String url = "https://webengserver.herokuapp.com/" + receiver+"/message";
@@ -180,6 +188,6 @@ public class ChatActivity extends AppCompatActivity {
 
             }
             new SendTask().execute();
-        } catch(Exception e) {e.printStackTrace();}
+
     }
 }
